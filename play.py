@@ -3,6 +3,7 @@
 import logic
 Color = logic.Color
 PieceType = logic.PieceType
+Space = logic.Space
 
 #welcome and prompt for option
 def cli():
@@ -56,6 +57,7 @@ def showBoard(game):
             p = game.board.getPiece(i,j)
             print(chrs[(p.color,p.type)], end=' ')
         print()
+
 
 
 #print menu options

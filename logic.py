@@ -16,6 +16,72 @@ class Color(enum.Enum):
     WHITE = 0
     BLACK = 1
 
+#enum for easy translation of space notation
+class Space(enum.Enum):
+    a1 = enum.auto()
+    a2 = enum.auto()
+    a3 = enum.auto()
+    a4 = enum.auto()
+    a5 = enum.auto()
+    a6 = enum.auto()
+    a7 = enum.auto()
+    a8 = enum.auto()
+    b1 = enum.auto()
+    b2 = enum.auto()
+    b3 = enum.auto()
+    b4 = enum.auto()
+    b5 = enum.auto()
+    b6 = enum.auto()
+    b7 = enum.auto()
+    b8 = enum.auto()
+    c1 = enum.auto()
+    c2 = enum.auto()
+    c3 = enum.auto()
+    c4 = enum.auto()
+    c5 = enum.auto()
+    c6 = enum.auto()
+    c7 = enum.auto()
+    c8 = enum.auto()
+    d1 = enum.auto()
+    d2 = enum.auto()
+    d3 = enum.auto()
+    d4 = enum.auto()
+    d5 = enum.auto()
+    d6 = enum.auto()
+    d7 = enum.auto()
+    d8 = enum.auto()
+    e1 = enum.auto()
+    e2 = enum.auto()
+    e3 = enum.auto()
+    e4 = enum.auto()
+    e5 = enum.auto()
+    e6 = enum.auto()
+    e7 = enum.auto()
+    e8 = enum.auto()
+    f1 = enum.auto()
+    f2 = enum.auto()
+    f3 = enum.auto()
+    f4 = enum.auto()
+    f5 = enum.auto()
+    f6 = enum.auto()
+    f7 = enum.auto()
+    f8 = enum.auto()
+    g1 = enum.auto()
+    g2 = enum.auto()
+    g3 = enum.auto()
+    g4 = enum.auto()
+    g5 = enum.auto()
+    g6 = enum.auto()
+    g7 = enum.auto()
+    g8 = enum.auto()
+    h1 = enum.auto()
+    h2 = enum.auto()
+    h3 = enum.auto()
+    h4 = enum.auto()
+    h5 = enum.auto()
+    h6 = enum.auto()
+    h7 = enum.auto()
+    h8 = enum.auto()
 
 #game: holds the board and info about game such as turn, move number, etc
 class Game():
@@ -81,9 +147,6 @@ class Board():
     def getPiece(self, rank, file):
         return self.state[8 * rank + file]
 
-    #change what piece is at given spot on board
-    def putPiece(self, rank, file, piece):
-        self.state[8 * rank + file] = piece
 
 # pieces: type, color
 class Piece():
