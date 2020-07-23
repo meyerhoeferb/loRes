@@ -83,6 +83,18 @@ class Space(enum.Enum):
     h7 = enum.auto()
     h8 = enum.auto()
 
+#convert letter coord to number coord
+l_to_n = {
+    'a': 0,
+    'b': 1,
+    'c': 2,
+    'd': 3,
+    'e': 4,
+    'f': 5,
+    'g': 6,
+    'h': 7,
+}
+
 #game: holds the board and info about game such as turn, move number, etc
 class Game():
     def __init__(self):
@@ -144,7 +156,7 @@ class Board():
         self.state = state
 
     #get piece given coords (so don't need to do that ugly math)
-    def getPiece(self, rank, file):
+    def getPieceXY(self, rank, file):
         return self.state[8 * rank + file]
 
 
@@ -155,6 +167,11 @@ class Piece():
         self.type = type
         self.color = color
 
+#convert classic chess coordinate to index in array
+def coordToIndex(c):
+    x = l_to_n[c[0]]
+    y = int(c[1]) - 1
+    return 8 * x + y
 
 #testing
 # g = Game()

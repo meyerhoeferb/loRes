@@ -54,10 +54,9 @@ def showBoard(game):
         col_order = range(7,-1,-1)
     for i in row_order:
         for j in col_order:
-            p = game.board.getPiece(i,j)
+            p = game.board.getPieceXY(i,j)
             print(chrs[(p.color,p.type)], end=' ')
         print()
-
 
 
 #print menu options
