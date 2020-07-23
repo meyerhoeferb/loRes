@@ -22,8 +22,12 @@ def cli():
 def play():
     game = logic.Game()
     game.parseFen('start.fen')      #initialize a new game
+    game.findMoves()
     showBoard(game)
     print(game.turn, game.castlePriv, game.ply, game.move, game.enpas) #FIXME
+
+    for m in game.moveGen.whiteMoves:
+        print(m)
 
 
 #found special characters online for ascii board visualization
