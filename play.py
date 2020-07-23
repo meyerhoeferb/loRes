@@ -21,7 +21,9 @@ def cli():
 #initiate game logic
 def play():
     game = logic.Game()
+    game.parseFen('start.fen')      #initialize a new game
     showBoard(game)
+    print(game.turn, game.castlePriv, game.ply, game.move, game.enpas) #FIXME
 
 
 #found special characters online for ascii board visualization
