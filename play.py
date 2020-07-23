@@ -3,7 +3,6 @@
 import logic
 Color = logic.Color
 PieceType = logic.PieceType
-Space = logic.Space
 
 #welcome and prompt for option
 def cli():
