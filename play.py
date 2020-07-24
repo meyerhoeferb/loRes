@@ -26,7 +26,7 @@ def play():
     showBoard(game)
     print(game.turn, game.castlePriv, game.ply, game.move, game.enpas) #FIXME
 
-    for m in game.moveGen.whiteMoves:
+    for m in game.moveGen.whiteMoves:   #FIXME
         print(m)
 
 
