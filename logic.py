@@ -5,8 +5,8 @@ import enum
 class PieceType(enum.Enum):
     EMPTY = enum.auto()
     PAWN = enum.auto()
-    BISHOP = enum.auto()
     KNIGHT = enum.auto()
+    BISHOP = enum.auto()
     ROOK = enum.auto()
     QUEEN = enum.auto()
     KING = enum.auto()
@@ -131,6 +131,10 @@ class Game():
 # the board for the given game, holds the pieces
 class Board():
     def __init__(self):
+        #array of white and blacks current material, index using enum values
+        #first index is empty squares so number doesn't matter
+        self.white_mat = [0, 8, 2, 2, 2, 1, 1]
+        self.black_mat = [0, 8, 2, 2, 2, 1, 1]
         #board state is a list of pieces, initialize all empty squares
         self.state = []
         for i in range(8):

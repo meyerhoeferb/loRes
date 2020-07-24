@@ -6,9 +6,17 @@ DEVS: Braden Meyerhoefer
 
 My own chess game, to then be used to make a chess engine.
 
+I am thinking of the chess logic as the "game" and the search logic
+as the "engine", but in reality they are one and the same. The "game" receives
+either a move or a board state as input from the CLI (either from human or machine)
+and generates possible moves, evaluates the best, updates the state and sends it back.
+
+If playing with a human, this means the CLI should validate the humans move, the
+engine assumes the move it is given is valid.
+
 ****************************************************************
 
-THE GAME
+THE CHESS LOGIC
 
 diagram of array indexes for board state
 
@@ -24,7 +32,7 @@ diagram of array indexes for board state
 
 ****************************************************************
 
-THE ENGINE
+THE SEARCH
 
 
 ****************************************************************
