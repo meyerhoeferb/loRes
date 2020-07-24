@@ -31,6 +31,28 @@ l_to_n = {
 #convert number coord to letter coord
 n_to_l = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 
+#move information will be stored as binary numbers
+#use the mask to isolate info from the number
+move_mask_dict = {
+    'origin': 0b0000000000000000000001111111,
+    'dest': 0b0000000000000011111110000000,
+    'captured': 0b0000000000111100000000000000,
+    'ep': 0b0000000001000000000000000000,  #en passant capture
+    'ps': 0b0000000010000000000000000000,  #pawn start
+    'promote': 0b0000111100000000000000000000,
+    'castle': 0b0001000000000000000000000000,
+} #to print x use format(x,'028b')   (prints 28 bits with left padding)
+#use the shift to create moves and access info
+shift_dict = {
+    'origin': 0,
+    'dest': 7,
+    'captured': 14,
+    'ep': 18,
+    'ps': 19,
+    'promote': 23,
+    'castle': 24,
+}
+
 #game: holds the board and info about game such as turn, move number, etc
 class Game():
     def __init__(self):
@@ -164,103 +186,35 @@ class MoveGenerator():
             y = i % 8
 
             #knight rules
-            #check the 8 possible spaces and add the valid ones
             if(space.type == PieceType.KNIGHT):
-                checkX = x + 1
-                checkY = y + 2
-                #validate space
-                if(checkX < 8 and checkY < 8):
-                    checkPiece = board.getPieceXY(checkX, checkY)
-                    #if empty then valid and add to appropriate list
-                    if(checkPiece.type == PieceType.EMPTY):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
-                    #if not empty but of opposite color and not a king then add
-                    elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
+                delta = [(2,1), (1,2), (-1,2), (-2,1), (-2,-1), (-1,-2), (1,-2), (2,-1)] #possible changes in coord
 
-                checkX = x + 2
-                checkY = y + 1
-                #validate space
-                if(checkX < 8 and checkY < 8):
-                    checkPiece = board.getPieceXY(checkX, checkY)
-                    #if empty then valid and add to appropriate list
-                    if(checkPiece.type == PieceType.EMPTY):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
-                    #if not empty but of opposite color and not a king then add
-                    elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
-
-                checkX = x - 1
-                checkY = y + 2
-                #validate space
-                if(checkX >= 0 and checkY < 8):
-                    checkPiece = board.getPieceXY(checkX, checkY)
-                    #if empty then valid and add to appropriate list
-                    if(checkPiece.type == PieceType.EMPTY):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
-                    #if not empty but of opposite color and not a king then add
-                    elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
-
-                checkX = x - 2
-                checkY = y + 1
-                #validate space
-                if(checkX >= 0 and checkY < 8):
-                    checkPiece = board.getPieceXY(checkX, checkY)
-                    #if empty then valid and add to appropriate list
-                    if(checkPiece.type == PieceType.EMPTY):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
-                    #if not empty but of opposite color and not a king then add
-                    elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
-
-                checkX = x - 1
-                checkY = y - 2
-                #validate space
-                if(checkX >= 0 and checkY >= 0):
-                    checkPiece = board.getPieceXY(checkX, checkY)
-                    #if empty then valid and add to appropriate list
-                    if(checkPiece.type == PieceType.EMPTY):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
-                    #if not empty but of opposite color and not a king then add
-                    elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
-
-                checkX = x - 2
-                checkY = y - 1
-                #validate space
-                if(checkX >= 0 and checkY >= 0):
-                    checkPiece = board.getPieceXY(checkX, checkY)
-                    #if empty then valid and add to appropriate list
-                    if(checkPiece.type == PieceType.EMPTY):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
-                    #if not empty but of opposite color and not a king then add
-                    elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
-
-                checkX = x + 1
-                checkY = y - 2
-                #validate space
-                if(checkX < 8 and checkY >= 0):
-                    checkPiece = board.getPieceXY(checkX, checkY)
-                    #if empty then valid and add to appropriate list
-                    if(checkPiece.type == PieceType.EMPTY):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
-                    #if not empty but of opposite color and not a king then add
-                    elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
-
-                checkX = x + 2
-                checkY = y - 1
-                #validate space
-                if(checkX < 8 and checkY >= 0):
-                    checkPiece = board.getPieceXY(checkX, checkY)
-                    #if empty then valid and add to appropriate list
-                    if(checkPiece.type == PieceType.EMPTY):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
-                    #if not empty but of opposite color and not a king then add
-                    elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
-                        foundMoves.append(coordToChess(x,y) + coordToChess(checkX,checkY))
+                for d in delta:
+                    checkX = x + d[0]
+                    checkY = y + d[1]
+                    #validate space
+                    if(checkX < 8 and checkX >= 0 and checkY < 8 and checkY >= 0):
+                        checkPiece = board.getPieceXY(checkX, checkY)
+                        #if empty then valid and add to appropriate list
+                        if(checkPiece.type == PieceType.EMPTY):
+                            newOri = coordToIndex(x,y)
+                            newDest = coordToIndex(checkX, checkY)
+                            newCap = 0
+                            newEp = 0       #nothing from here on is possible for knights
+                            newPs = 0
+                            newPromote = 0
+                            newCastle = 0
+                            foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
+                        #if not empty but of opposite color and not a king then add
+                        elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
+                            newOri = coordToIndex(x,y)
+                            newDest = coordToIndex(checkX, checkY)
+                            newCap = checkPiece.type.value      #get number corresponding to piece enum
+                            newEp = 0       #nothing from here on is possible for knights
+                            newPs = 0
+                            newPromote = 0
+                            newCastle = 0
+                            foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
 
         #udpate appropriate move list with found moves
         if(color == Color.WHITE):
@@ -282,6 +236,17 @@ def coordToIndex(x, y):
 #convert coord to chess notation
 def coordToChess(x,y):
     return n_to_l[x] + str(y + 1)
+
+#create a move with the given info
+def createMove(origin, dest, captured, ep, ps, promote, castle):
+    bDest = dest << shift_dict['dest']
+    bCap = captured << shift_dict['captured']
+    bEp = ep << shift_dict['ep']
+    bPs = ps << shift_dict['ps']
+    bProm = promote << shift_dict['promote']
+    bCastle =castle << shift_dict['castle']
+
+    return origin + bDest + bCap + bEp + bPs + bProm + bCastle
 
 #testing
 # g = Game()

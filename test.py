@@ -18,9 +18,11 @@ shift_dict = {
     'castle': 24,
 }
 
-
+import logic
+PieceType = logic.PieceType
 # print(bin(format(move_mask_dict['origin'], '028b')))
 print(move_mask_dict['dest'])
 test = 0b1111111
 test_shift = test << shift_dict['dest']
 print(test_shift)
+print(PieceType(4).name)
