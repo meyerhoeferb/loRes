@@ -18,8 +18,8 @@ shift_dict = {
     'castle': 24,
 }
 
-import engine
-PieceType = engine.PieceType
+import loRes
+PieceType = loRes.PieceType
 # print(bin(format(move_mask_dict['origin'], '028b')))
 print(move_mask_dict['dest'])
 test = 0b1111111

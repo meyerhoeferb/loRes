@@ -1,4 +1,9 @@
-# Game Logic for loRes Chess
+'''
+the engine:
+
+logic for move generation and search
+main will have options for starting in uci or xboard mode
+'''
 import enum
 
 # enum for piece types
@@ -34,13 +39,14 @@ n_to_l = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 #move information will be stored as binary numbers
 #use the mask to isolate info from the number
 move_mask_dict = {
-    'origin': 0b0000000000000000000001111111,
-    'dest': 0b0000000000000011111110000000,
-    'captured': 0b0000000000111100000000000000,
+    'origin': 0b0000000000000000000001111111,   #where piece comes from
+    'dest': 0b0000000000000011111110000000,     #where piece going to
+    'captured': 0b0000000000111100000000000000, #what does it capture
     'ep': 0b0000000001000000000000000000,  #en passant capture
     'ps': 0b0000000010000000000000000000,  #pawn start
-    'promote': 0b0000111100000000000000000000,
-    'castle': 0b0001000000000000000000000000,
+    'promote': 0b0000111100000000000000000000,  #what does it promote to
+    'castle': 0b0001000000000000000000000000,   #is this move a castle
+    'score': 0b1110000000000000000000000000,    #move score for move ordering in search
 } #to print x use format(x,'028b')   (prints 28 bits with left padding)
 #use the shift to create moves and access info
 shift_dict = {
@@ -51,6 +57,7 @@ shift_dict = {
     'ps': 19,
     'promote': 23,
     'castle': 24,
+    'score': 25,
 }
 
 #game: holds the board and info about game such as turn, move number, etc
@@ -62,7 +69,7 @@ class Game():
         self.castlePriv = ''            #castling availability, keep fen notation
         self.ply = 1                    #count half moves for draw condition
         self.move = 1                   #count full moves, inc after black move
-        self.enpas = -1                #index of en passant target, -1 if none
+        self.enpas = -1                 #index of en passant target, -1 if none
 
     #parse given fen string, used to setup board states given by cli
     def parseFen(self, fen):
@@ -161,15 +168,14 @@ class Piece():
 #moves are always a 4 char string of format origindest for instance 'e2e4'
 class MoveGenerator():
     def __init__(self):
-        self.whiteMoves = []
-        self.blackMoves = []
+        self.foundMoves = []
 
     #find moves by going through board state and following rules for found pieces
     #TODO: somewhere in the beginning of this, if a color is in check their moves
     #are limited only things that stop check and that requires its own logic (maybe pass if we're in check??)
     def updateMoves(self, board, color):
         #iterate through all spots and collect valid moves for appropriate pieces
-        foundMoves = []
+        self.foundMoves = []
         for i, space in enumerate(board.state):
             if(space.type == PieceType.EMPTY or space.color != color):
                 continue
@@ -197,7 +203,7 @@ class MoveGenerator():
                             newPs = 0
                             newPromote = 0
                             newCastle = 0
-                            foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
                         #if not empty but of opposite color and not a king then add
                         elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
                             newOri = coordToIndex(x,y)
@@ -207,86 +213,14 @@ class MoveGenerator():
                             newPs = 0
                             newPromote = 0
                             newCastle = 0
-                            foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
 
-            #bishop rules
+            #slider rules
             if(space.type == PieceType.BISHOP):
                 delta = [(1,1), (1,-1), (-1,1), (-1,-1)]
-
-                for d in delta:
-                    checkX = x + d[0]
-                    checkY = y + d[1]
-                    #follow this direction until leave board or hit something
-                    while(True):
-                        if(not(checkX < 8 and checkX >= 0 and checkY < 8 and checkY >= 0)):
-                            break
-                        checkPiece = board.getPieceXY(checkX, checkY)
-                        if(checkPiece.type == PieceType.EMPTY):
-                            newOri = coordToIndex(x,y)
-                            newDest = coordToIndex(checkX, checkY)
-                            newCap = 0
-                            newEp = 0       #nothing from here on is possible for knights
-                            newPs = 0
-                            newPromote = 0
-                            newCastle = 0
-                            foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
-                        elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
-                            newOri = coordToIndex(x,y)
-                            newDest = coordToIndex(checkX, checkY)
-                            newCap = checkPiece.type.value      #get number corresponding to piece enum
-                            newEp = 0       #nothing from here on is possible for knights
-                            newPs = 0
-                            newPromote = 0
-                            newCastle = 0
-                            foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
-                            break
-                        elif(checkPiece.color == color or checkPiece.type == PieceType.KING):
-                            break
-
-                        #go to next possible position in this direction if didn't break
-                        checkX = x + d[0]
-                        checkY = y + d[1]
-
-            #rook rules (same idea as bishop just different deltas)
-            if(space.type == PieceType.ROOK):
+            elif(space.type == PieceType.ROOK):
                 delta = [(1,0), (-1,0), (0,1), (0,-1)]
-
-                for d in delta:
-                    checkX = x + d[0]
-                    checkY = y + d[1]
-                    #follow this direction until leave board or hit something
-                    while(True):
-                        if(not(checkX < 8 and checkX >= 0 and checkY < 8 and checkY >= 0)):
-                            break
-                        checkPiece = board.getPieceXY(checkX, checkY)
-                        if(checkPiece.type == PieceType.EMPTY):
-                            newOri = coordToIndex(x,y)
-                            newDest = coordToIndex(checkX, checkY)
-                            newCap = 0
-                            newEp = 0       #nothing from here on is possible for knights
-                            newPs = 0
-                            newPromote = 0
-                            newCastle = 0
-                            foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
-                        elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
-                            newOri = coordToIndex(x,y)
-                            newDest = coordToIndex(checkX, checkY)
-                            newCap = checkPiece.type.value      #get number corresponding to piece enum
-                            newEp = 0       #nothing from here on is possible for knights
-                            newPs = 0
-                            newPromote = 0
-                            newCastle = 0
-                            foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
-                            break
-                        elif(checkPiece.color == color or checkPiece.type == PieceType.KING):
-                            break
-
-                        #go to next possible position in this direction if didn't break
-                        checkX = x + d[0]
-                        checkY = y + d[1]
-
-            #queen rules (rook and bishop deltas combined)
-            if(space.type == PieceType.QUEEN):
+            elif(space.type == PieceType.QUEEN):
                 delta = [(1,1), (1,-1), (-1,1), (-1,-1), (1,0), (-1,0), (0,1), (0,-1)]
 
                 for d in delta:
@@ -305,16 +239,16 @@ class MoveGenerator():
                             newPs = 0
                             newPromote = 0
                             newCastle = 0
-                            foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
                         elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
                             newOri = coordToIndex(x,y)
                             newDest = coordToIndex(checkX, checkY)
                             newCap = checkPiece.type.value      #get number corresponding to piece enum
-                            newEp = 0       #nothing from here on is possible for knights
+                            newEp = 0
                             newPs = 0
                             newPromote = 0
                             newCastle = 0
-                            foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
                             break
                         elif(checkPiece.color == color or checkPiece.type == PieceType.KING):
                             break
@@ -322,12 +256,6 @@ class MoveGenerator():
                         #go to next possible position in this direction if didn't break
                         checkX = x + d[0]
                         checkY = y + d[1]
-
-        #udpate appropriate move list with found moves
-        if(color == Color.WHITE):
-            self.whiteMoves = foundMoves[:]
-        else:
-            self.blackMoves = foundMoves[:]
 
 
 #convert classic chess coordinate to index in array

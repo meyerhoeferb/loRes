@@ -1,8 +1,8 @@
-#file that is run to play the game, controls CLI
+#the 'GUI' for the engine, holds board state, shows board, and sends messages to engine
 
-import engine
-Color = engine.Color
-PieceType = engine.PieceType
+import loRes
+Color = loRes.Color
+PieceType = loRes.PieceType
 
 #welcome and prompt for option
 def cli():
@@ -20,13 +20,13 @@ def cli():
 
 #initiate game logic
 def play():
-    game = engine.Game()
+    game = loRes.Game()
     game.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')      #initialize a new game
     game.findMoves()
     showBoard(game)
     print(game.turn, game.castlePriv, game.ply, game.move, game.enpas) #FIXME
 
-    for m in game.moveGen.whiteMoves:   #FIXME
+    for m in game.moveGen.foundMoves:   #FIXME
         print(m)
 
 
