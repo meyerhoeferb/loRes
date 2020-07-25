@@ -30,6 +30,8 @@ diagram of array indexes for board state
 1 0 1 2 3 4 5 6 7
   a b c d e f g h
 
+for coord system: x = rank, y = file
+
 ****************************************************************
 
 THE SEARCH

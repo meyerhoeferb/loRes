@@ -186,19 +186,21 @@ class MoveGenerator():
             x = i // 8
             y = i % 8
 
-            #pawn rules FIXME: rn only promotes to queen, should eventually add 4 moves in that scenario, one for each promote
+            #pawn rules
             if(space.type == PieceType.PAWN):
                 #set up vertical movement for different colors
                 if(color == Color.WHITE):
-                    yDir = 1
-                    promRow = 7
+                    rankChange = 1
+                    promRow = 6
+                    sRow = 1
                 else:
-                    yDir = -1
-                    promRow = 2
+                    rankChange = -1
+                    promRow = 1
+                    sRow = 6
 
                 #check space in front
-                checkX = x + 0
-                checkY = y + yDir
+                checkX = x + rankChange
+                checkY = y + 0
                 #validate space
                 if(checkX < 8 and checkX >= 0 and checkY < 8 and checkY >= 0):
                     checkPiece = board.getPieceXY(checkX, checkY)
@@ -219,6 +221,62 @@ class MoveGenerator():
                             self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.QUEEN.value, newCastle, newScore))
                         else:
                             self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
+
+                #check special first move
+                if(x == sRow):
+                    checkX = x + 2 * rankChange
+                    checkY = y + 0
+                    #validate space
+                    if(checkX < 8 and checkX >= 0 and checkY < 8 and checkY >= 0):
+                        checkPiece = board.getPieceXY(checkX, checkY)
+                        if(checkPiece.type == PieceType.EMPTY):
+                            newOri = coordToIndex(x,y)
+                            newDest = coordToIndex(checkX, checkY)
+                            newCap = 0
+                            newEp = 0
+                            newPs = 1
+                            newPromote = 0
+                            newCastle = 0
+                            newScore = 0
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
+
+                #check capture spaces
+                delta = [(rankChange, -1), (rankChange, 1)]
+                for d in delta:
+                    checkX = x + d[0]
+                    checkY = y + d[1]
+                    #validate space
+                    if(checkX < 8 and checkX >= 0 and checkY < 8 and checkY >= 0):
+                        checkPiece = board.getPieceXY(checkX, checkY)
+                        #en passant capture
+                        if(checkPiece.type == PieceType.EMPTY and i == board.enpas):
+                            newOri = coordToIndex(x,y)
+                            newDest = coordToIndex(checkX, checkY)
+                            newCap = PieceType.PAWN.value
+                            newEp = 1
+                            newPs = 0
+                            newPromote = 0
+                            newCastle = 0
+                            newScore = move_scores['cap']
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
+                        #normal capture
+                        elif(checkPiece.type != PieceType.EMPTY and checkPiece.color != color and checkPiece.type != PieceType.KING):
+                            newOri = coordToIndex(x,y)
+                            newDest = coordToIndex(checkX, checkY)
+                            newCap = checkPiece.type.value
+                            newEp = 0
+                            newPs = 0
+                            newPromote = 0  #make zero, before adding move will check for promotion possibility
+                            newCastle = 0
+                            newScore = move_scores['cap']
+                            if(x == promRow):
+                                newScore += move_scores['prom']  #prom and cap just add scores
+                                self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.KNIGHT.value, newCastle, newScore))
+                                self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.BISHOP.value, newCastle, newScore))
+                                self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.ROOK.value, newCastle, newScore))
+                                self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.QUEEN.value, newCastle, newScore))
+                            else:
+                                self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
 
 
             #knight rules
@@ -242,7 +300,7 @@ class MoveGenerator():
                             newCastle = 0
                             newScore = 0
                             self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
-                        #if not empty but of opposite color and not a king then add
+                        #capture
                         elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
                             newOri = coordToIndex(x,y)
                             newDest = coordToIndex(checkX, checkY)
@@ -324,8 +382,3 @@ def createMove(origin, dest, captured, ep, ps, promote, castle, score):
     bScore = score << shift_dict['score']
 
     return origin + bDest + bCap + bEp + bPs + bProm + bCastle + bScore
-
-#testing
-# g = Game()
-# for p in g.board.state:
-#     print(p.type, p.color)
