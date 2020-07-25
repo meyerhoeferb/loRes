@@ -59,17 +59,40 @@ shift_dict = {
     'castle': 24,
     'score': 25,
 }
+#key for ranking of various types of moves
+move_scores = {
+    'none': 0,
+    'prom': 1,
+    'cap': 2,
+}
 
-#game: holds the board and info about game such as turn, move number, etc
-class Game():
+
+# the board for the given game, holds all info about game
+class Board():
     def __init__(self):
-        self.board = Board()
+        #array of white and blacks current material, index using enum values
+        #first index is empty squares so number doesn't matter
+        self.white_mat = [0, 8, 2, 2, 2, 1, 1]
+        self.black_mat = [0, 8, 2, 2, 2, 1, 1]
         self.moveGen = MoveGenerator()
         self.turn = Color.WHITE         #TODO: for later remember can flip turn with not(self.turn)
         self.castlePriv = ''            #castling availability, keep fen notation
         self.ply = 1                    #count half moves for draw condition
         self.move = 1                   #count full moves, inc after black move
         self.enpas = -1                 #index of en passant target, -1 if none
+        #board state is a list of pieces, initialize all empty squares
+        self.state = []
+        for i in range(8):
+            for j in range(8):
+                self.state.append(Piece(PieceType.EMPTY, Color.WHITE))
+
+    #get piece given coords
+    def getPieceXY(self, x, y):
+        return self.state[8 * x + y]
+
+    #place a piece on the given square
+    def putPieceXY(self, x, y, type, color):
+        self.state[8 * x + y] = Piece(type, color)
 
     #parse given fen string, used to setup board states given by cli
     def parseFen(self, fen):
@@ -98,32 +121,32 @@ class Game():
             y = 0
             for p in r:
                 if(p == 'p'):
-                    self.board.putPieceXY(x,y,PieceType.PAWN, Color.BLACK)
+                    self.putPieceXY(x,y,PieceType.PAWN, Color.BLACK)
                 elif(p == 'P'):
-                    self.board.putPieceXY(x,y,PieceType.PAWN, Color.WHITE)
+                    self.putPieceXY(x,y,PieceType.PAWN, Color.WHITE)
                 elif(p == 'n'):
-                    self.board.putPieceXY(x,y,PieceType.KNIGHT, Color.BLACK)
+                    self.putPieceXY(x,y,PieceType.KNIGHT, Color.BLACK)
                 elif(p == 'N'):
-                    self.board.putPieceXY(x,y,PieceType.KNIGHT, Color.WHITE)
+                    self.putPieceXY(x,y,PieceType.KNIGHT, Color.WHITE)
                 elif(p == 'b'):
-                    self.board.putPieceXY(x,y,PieceType.BISHOP, Color.BLACK)
+                    self.putPieceXY(x,y,PieceType.BISHOP, Color.BLACK)
                 elif(p == 'B'):
-                    self.board.putPieceXY(x,y,PieceType.BISHOP, Color.WHITE)
+                    self.putPieceXY(x,y,PieceType.BISHOP, Color.WHITE)
                 elif(p == 'r'):
-                    self.board.putPieceXY(x,y,PieceType.ROOK, Color.BLACK)
+                    self.putPieceXY(x,y,PieceType.ROOK, Color.BLACK)
                 elif(p == 'R'):
-                    self.board.putPieceXY(x,y,PieceType.ROOK, Color.WHITE)
+                    self.putPieceXY(x,y,PieceType.ROOK, Color.WHITE)
                 elif(p == 'q'):
-                    self.board.putPieceXY(x,y,PieceType.QUEEN, Color.BLACK)
+                    self.putPieceXY(x,y,PieceType.QUEEN, Color.BLACK)
                 elif(p == 'Q'):
-                    self.board.putPieceXY(x,y,PieceType.QUEEN, Color.WHITE)
+                    self.putPieceXY(x,y,PieceType.QUEEN, Color.WHITE)
                 elif(p == 'k'):
-                    self.board.putPieceXY(x,y,PieceType.KING, Color.BLACK)
+                    self.putPieceXY(x,y,PieceType.KING, Color.BLACK)
                 elif(p == 'K'):
-                    self.board.putPieceXY(x,y,PieceType.KING, Color.WHITE)
+                    self.putPieceXY(x,y,PieceType.KING, Color.WHITE)
                 else:
                     for i in range(int(p)):
-                        self.board.putPieceXY(x,y,PieceType.EMPTY, Color.WHITE) #just make all empty black (for some reason flips)
+                        self.putPieceXY(x,y,PieceType.EMPTY, Color.WHITE) #just make all empty black (for some reason flips)
                         y += 1
                         continue
                 y+=1
@@ -131,29 +154,7 @@ class Game():
 
     #update the move generator, just here so CLI doesn't need to access generator
     def findMoves(self):
-        self.moveGen.updateMoves(self.board, self.turn)
-
-
-# the board for the given game, holds the pieces
-class Board():
-    def __init__(self):
-        #array of white and blacks current material, index using enum values
-        #first index is empty squares so number doesn't matter
-        self.white_mat = [0, 8, 2, 2, 2, 1, 1]
-        self.black_mat = [0, 8, 2, 2, 2, 1, 1]
-        #board state is a list of pieces, initialize all empty squares
-        self.state = []
-        for i in range(8):
-            for j in range(8):
-                self.state.append(Piece(PieceType.EMPTY, Color.WHITE))
-
-    #get piece given coords
-    def getPieceXY(self, x, y):
-        return self.state[8 * x + y]
-
-    #place a piece on the given square
-    def putPieceXY(self, x, y, type, color):
-        self.state[8 * x + y] = Piece(type, color)
+        self.moveGen.updateMoves(self)
 
 
 # pieces: type, color
@@ -173,8 +174,9 @@ class MoveGenerator():
     #find moves by going through board state and following rules for found pieces
     #TODO: somewhere in the beginning of this, if a color is in check their moves
     #are limited only things that stop check and that requires its own logic (maybe pass if we're in check??)
-    def updateMoves(self, board, color):
+    def updateMoves(self, board):
         #iterate through all spots and collect valid moves for appropriate pieces
+        color = board.turn
         self.foundMoves = []
         for i, space in enumerate(board.state):
             if(space.type == PieceType.EMPTY or space.color != color):
@@ -183,6 +185,41 @@ class MoveGenerator():
             #calculate x,y of piece
             x = i // 8
             y = i % 8
+
+            #pawn rules FIXME: rn only promotes to queen, should eventually add 4 moves in that scenario, one for each promote
+            if(space.type == PieceType.PAWN):
+                #set up vertical movement for different colors
+                if(color == Color.WHITE):
+                    yDir = 1
+                    promRow = 7
+                else:
+                    yDir = -1
+                    promRow = 2
+
+                #check space in front
+                checkX = x + 0
+                checkY = y + yDir
+                #validate space
+                if(checkX < 8 and checkX >= 0 and checkY < 8 and checkY >= 0):
+                    checkPiece = board.getPieceXY(checkX, checkY)
+                    if(checkPiece.type == PieceType.EMPTY):
+                        newOri = coordToIndex(x,y)
+                        newDest = coordToIndex(checkX, checkY)
+                        newCap = 0
+                        newEp = 0
+                        newPs = 0
+                        newPromote = 0  #make zero, before adding move will check for promotion possibility
+                        newCastle = 0
+                        newScore = 0
+                        if(x == promRow):
+                            newScore = move_scores['prom']
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.KNIGHT.value, newCastle, newScore))
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.BISHOP.value, newCastle, newScore))
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.ROOK.value, newCastle, newScore))
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.QUEEN.value, newCastle, newScore))
+                        else:
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
+
 
             #knight rules
             if(space.type == PieceType.KNIGHT):
@@ -203,7 +240,8 @@ class MoveGenerator():
                             newPs = 0
                             newPromote = 0
                             newCastle = 0
-                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
+                            newScore = 0
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
                         #if not empty but of opposite color and not a king then add
                         elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
                             newOri = coordToIndex(x,y)
@@ -213,7 +251,8 @@ class MoveGenerator():
                             newPs = 0
                             newPromote = 0
                             newCastle = 0
-                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
+                            newScore = move_scores['cap']
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
 
             #slider rules
             if(space.type == PieceType.BISHOP):
@@ -239,7 +278,8 @@ class MoveGenerator():
                             newPs = 0
                             newPromote = 0
                             newCastle = 0
-                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
+                            newScore = 0
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
                         elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
                             newOri = coordToIndex(x,y)
                             newDest = coordToIndex(checkX, checkY)
@@ -248,7 +288,8 @@ class MoveGenerator():
                             newPs = 0
                             newPromote = 0
                             newCastle = 0
-                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle))
+                            newScore = move_scores['cap']
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
                             break
                         elif(checkPiece.color == color or checkPiece.type == PieceType.KING):
                             break
@@ -273,15 +314,16 @@ def coordToChess(x,y):
     return n_to_l[x] + str(y + 1)
 
 #create a move with the given info
-def createMove(origin, dest, captured, ep, ps, promote, castle):
+def createMove(origin, dest, captured, ep, ps, promote, castle, score):
     bDest = dest << shift_dict['dest']
     bCap = captured << shift_dict['captured']
     bEp = ep << shift_dict['ep']
     bPs = ps << shift_dict['ps']
     bProm = promote << shift_dict['promote']
-    bCastle =castle << shift_dict['castle']
+    bCastle = castle << shift_dict['castle']
+    bScore = score << shift_dict['score']
 
-    return origin + bDest + bCap + bEp + bPs + bProm + bCastle
+    return origin + bDest + bCap + bEp + bPs + bProm + bCastle + bScore
 
 #testing
 # g = Game()

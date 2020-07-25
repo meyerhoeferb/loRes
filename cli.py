@@ -20,7 +20,7 @@ def cli():
 
 #initiate game logic
 def play():
-    game = loRes.Game()
+    game = loRes.Board()
     game.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')      #initialize a new game
     game.findMoves()
     showBoard(game)
@@ -59,7 +59,7 @@ def showBoard(game):
         col_order = range(7,-1,-1)
     for i in row_order:
         for j in col_order:
-            p = game.board.getPieceXY(i,j)
+            p = game.getPieceXY(i,j)
             print(chrs[(p.color,p.type)], end=' ')
         print()
 
