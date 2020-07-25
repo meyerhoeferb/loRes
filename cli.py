@@ -1,8 +1,8 @@
 #file that is run to play the game, controls CLI
 
-import logic
-Color = logic.Color
-PieceType = logic.PieceType
+import engine
+Color = engine.Color
+PieceType = engine.PieceType
 
 #welcome and prompt for option
 def cli():
@@ -20,8 +20,8 @@ def cli():
 
 #initiate game logic
 def play():
-    game = logic.Game()
-    game.parseFen('start.fen')      #initialize a new game
+    game = engine.Game()
+    game.parseFen('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')      #initialize a new game
     game.findMoves()
     showBoard(game)
     print(game.turn, game.castlePriv, game.ply, game.move, game.enpas) #FIXME
@@ -66,8 +66,11 @@ def showBoard(game):
 
 #print menu options
 def printMenu():
+    print()
     print('play')
     print('quit')
+    print()
+
 
 
 if __name__ == '__main__':
