@@ -58,8 +58,19 @@ typedef struct {
     int majPc[3];               //count of major pieces on board
     int minPc[3];               //count of minor pieces on board
 
-    S_UNDO history[MAX_GAME_MOVES]; //history of game positions/moves 
+    S_UNDO history[MAX_GAME_MOVES]; //history of game positions/moves (indexed by hisPly, used to undo moves and also check for repitition)
 
 } S_BOARD;
+
+// ***************** MACROS *****************
+#define FR2SQ(f,r) ((21 + (f)) + ((r) * 10))    //for file and rank, return 120 index
+
+
+// ***************** GLOBALS *****************
+extern int sq120ToSq64[BRD_SQ_NUM];     //convert padded board index to bitboard index
+extern int sq64ToSq120[64];             //convert bitboard index to padded board index
+
+// ***************** FUNCTIONS *****************
+extern void allInit();  //init.c
 
 #endif
