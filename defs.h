@@ -1,6 +1,22 @@
 #ifndef DEFS_H
 #define DEFS_H
 
+#include "stdlib.h"
+
+#define DEBUG
+
+#ifndef DEBUG
+#define ASSERT(n)
+
+#else
+#define ASSERT(n) \
+if(!(n)) { \
+printf("\nFAILED:  %s  ", #n); \
+printf("In file %s ", __FILE__); \
+printf("at line %d \n", __LINE__); \
+exit(1);}
+#endif
+
 typedef unsigned long long U64;
 
 #define NAME "loRes 1.0"
@@ -58,15 +74,19 @@ typedef struct {
     int majPc[3];               //count of major pieces on board
     int minPc[3];               //count of minor pieces on board
 
+    int pList[13][10];          //piecelists for each type of piece (can possibly have 10 of each) makes movegen faster
+
     S_UNDO history[MAX_GAME_MOVES]; //history of game positions/moves (indexed by hisPly, used to undo moves and also check for repitition)
 
 } S_BOARD;
 
 // ***************** MACROS *****************
+
 #define FR2SQ(f,r) ((21 + (f)) + ((r) * 10))    //for file and rank, return 120 index
 
 
 // ***************** GLOBALS *****************
+
 extern int sq120ToSq64[BRD_SQ_NUM];     //convert padded board index to bitboard index
 extern int sq64ToSq120[64];             //convert bitboard index to padded board index
 

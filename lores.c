@@ -20,6 +20,11 @@ int main() {
         }
         printf("%5d", sq64ToSq120[i]);
     }
+    printf("\n");
+
+    int n = 1;
+    int m = 4;
+    ASSERT(n == m);
 
 
 
