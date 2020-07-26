@@ -63,6 +63,8 @@ def showBoard(game):
             print(chrs[(p.color,p.type)], end=' ')
         print()
 
+    print(PieceType.PAWN.value)
+
 
 #print menu options
 def printMenu():

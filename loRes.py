@@ -46,7 +46,6 @@ move_mask_dict = {
     'ps': 0b0000000010000000000000000000,  #pawn start
     'promote': 0b0000111100000000000000000000,  #what does it promote to
     'castle': 0b0001000000000000000000000000,   #is this move a castle
-    'score': 0b1110000000000000000000000000,    #move score for move ordering in search
 } #to print x use format(x,'028b')   (prints 28 bits with left padding)
 #use the shift to create moves and access info
 shift_dict = {
@@ -57,13 +56,6 @@ shift_dict = {
     'ps': 19,
     'promote': 23,
     'castle': 24,
-    'score': 25,
-}
-#key for ranking of various types of moves
-move_scores = {
-    'none': 0,
-    'prom': 1,
-    'cap': 2,
 }
 
 
@@ -165,6 +157,13 @@ class Piece():
         self.color = color
 
 
+#move object, holds move prio for search and move info
+class Move():
+    def __init__(self, info, prio):
+        self.info = info
+        self.prio = prio
+
+
 #move generator
 #moves are always a 4 char string of format origindest for instance 'e2e4'
 class MoveGenerator():
@@ -185,6 +184,39 @@ class MoveGenerator():
             #calculate x,y of piece
             x = i // 8
             y = i % 8
+
+            #king rules
+            if(space.type == PieceType.KING):
+                #move pattern
+                delta = [(1,0), (-1,0), (0,1), (0,-1), (1,1), (1,-1), (-1,1), (-1,-1)]
+                for d in delta:
+                    checkX = x + d[0]
+                    checkY = y + d[1]
+                    #validate space
+                    if(checkX < 8 and checkX >= 0 and checkY < 8 and checkY >= 0):
+                        checkPiece = board.getPieceXY(checkX, checkY)
+                        #if empty then valid and add to appropriate list
+                        if(checkPiece.type == PieceType.EMPTY):
+                            newOri = coordToIndex(x,y)
+                            newDest = coordToIndex(checkX, checkY)
+                            newCap = 0
+                            newEp = 0
+                            newPs = 0
+                            newPromote = 0
+                            newCastle = 0
+                            newPrio = 0
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newPrio))
+                        #capture
+                        elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
+                            newOri = coordToIndex(x,y)
+                            newDest = coordToIndex(checkX, checkY)
+                            newCap = checkPiece.type.value      #get number corresponding to piece enum
+                            newEp = 0
+                            newPs = 0
+                            newPromote = 0
+                            newCastle = 0
+                            newPrio = 2     #king captures always checked like lowest rated capture
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newPrio))
 
             #pawn rules
             if(space.type == PieceType.PAWN):
@@ -212,15 +244,15 @@ class MoveGenerator():
                         newPs = 0
                         newPromote = 0  #make zero, before adding move will check for promotion possibility
                         newCastle = 0
-                        newScore = 0
+                        newPrio = 0
                         if(x == promRow):
-                            newScore = move_scores['prom']
-                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.KNIGHT.value, newCastle, newScore))
-                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.BISHOP.value, newCastle, newScore))
-                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.ROOK.value, newCastle, newScore))
-                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.QUEEN.value, newCastle, newScore))
+                            newPrio += 1
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.KNIGHT.value, newCastle, newPrio))
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.BISHOP.value, newCastle, newPrio))
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.ROOK.value, newCastle, newPrio))
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.QUEEN.value, newCastle, newPrio))
                         else:
-                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newPrio))
 
                 #check special first move
                 if(x == sRow):
@@ -237,8 +269,8 @@ class MoveGenerator():
                             newPs = 1
                             newPromote = 0
                             newCastle = 0
-                            newScore = 0
-                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
+                            newPrio = 0
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newPrio))
 
                 #check capture spaces
                 delta = [(rankChange, -1), (rankChange, 1)]
@@ -257,8 +289,8 @@ class MoveGenerator():
                             newPs = 0
                             newPromote = 0
                             newCastle = 0
-                            newScore = move_scores['cap']
-                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
+                            newPrio = checkPiece.PAWN.value - space.type.value + 6     #prio based on value difference of capture, + 6 so caps are always at least 2
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newPrio))
                         #normal capture
                         elif(checkPiece.type != PieceType.EMPTY and checkPiece.color != color and checkPiece.type != PieceType.KING):
                             newOri = coordToIndex(x,y)
@@ -268,15 +300,15 @@ class MoveGenerator():
                             newPs = 0
                             newPromote = 0  #make zero, before adding move will check for promotion possibility
                             newCastle = 0
-                            newScore = move_scores['cap']
+                            newPrio = checkPiece.PAWN.value - space.type.value + 6
                             if(x == promRow):
-                                newScore += move_scores['prom']  #prom and cap just add scores
-                                self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.KNIGHT.value, newCastle, newScore))
-                                self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.BISHOP.value, newCastle, newScore))
-                                self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.ROOK.value, newCastle, newScore))
-                                self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.QUEEN.value, newCastle, newScore))
+                                newPrio += 1
+                                self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.KNIGHT.value, newCastle, newPrio))
+                                self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.BISHOP.value, newCastle, newPrio))
+                                self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.ROOK.value, newCastle, newPrio))
+                                self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, PieceType.QUEEN.value, newCastle, newPrio))
                             else:
-                                self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
+                                self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newPrio))
 
 
             #knight rules
@@ -298,8 +330,8 @@ class MoveGenerator():
                             newPs = 0
                             newPromote = 0
                             newCastle = 0
-                            newScore = 0
-                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
+                            newPrio = 0
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newPrio))
                         #capture
                         elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
                             newOri = coordToIndex(x,y)
@@ -309,8 +341,8 @@ class MoveGenerator():
                             newPs = 0
                             newPromote = 0
                             newCastle = 0
-                            newScore = move_scores['cap']
-                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
+                            newPrio = checkPiece.PAWN.value - space.type.value + 6
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newPrio))
 
             #slider rules
             if(space.type == PieceType.BISHOP):
@@ -336,8 +368,8 @@ class MoveGenerator():
                             newPs = 0
                             newPromote = 0
                             newCastle = 0
-                            newScore = 0
-                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
+                            newPrio = 0
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newPrio))
                         elif(checkPiece.color != color and checkPiece.type != PieceType.KING):
                             newOri = coordToIndex(x,y)
                             newDest = coordToIndex(checkX, checkY)
@@ -346,8 +378,8 @@ class MoveGenerator():
                             newPs = 0
                             newPromote = 0
                             newCastle = 0
-                            newScore = move_scores['cap']
-                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newScore))
+                            newPrio = checkPiece.PAWN.value - space.type.value + 6
+                            self.foundMoves.append(createMove(newOri, newDest, newCap, newEp, newPs, newPromote, newCastle, newPrio))
                             break
                         elif(checkPiece.color == color or checkPiece.type == PieceType.KING):
                             break
@@ -372,13 +404,12 @@ def coordToChess(x,y):
     return n_to_l[x] + str(y + 1)
 
 #create a move with the given info
-def createMove(origin, dest, captured, ep, ps, promote, castle, score):
+def createMove(origin, dest, captured, ep, ps, promote, castle, prio):
     bDest = dest << shift_dict['dest']
     bCap = captured << shift_dict['captured']
     bEp = ep << shift_dict['ep']
     bPs = ps << shift_dict['ps']
     bProm = promote << shift_dict['promote']
     bCastle = castle << shift_dict['castle']
-    bScore = score << shift_dict['score']
 
-    return origin + bDest + bCap + bEp + bPs + bProm + bCastle + bScore
+    return Move(origin + bDest + bCap + bEp + bPs + bProm + bCastle, prio)
