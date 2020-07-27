@@ -1,12 +1,43 @@
 
 
 #include "defs.h"
+#include "stdlib.h"
+
+//generate random 64 bit number, rand makes 15 bit number so add a bunch of them together shifted over
+//last line just takes the 4 final bits we need to fill 64
+#define RAND64 (    (U64)rand() + \
+                    ((U64)rand() << 15) + \
+                    ((U64)rand() << 30) + \
+                    ((U64)rand() << 45) + \
+                    (((U64)rand() & 0xf) << 60) )
+
 
 int sq120ToSq64[BRD_SQ_NUM];
 int sq64ToSq120[64];
 
 U64 setMask[64];
 U64 clearMask[64];
+
+U64 pieceKeys[13][120];             //these all hold random U64 numbers, used for hashing position
+U64 sideKey;
+U64 castleKeys[16];
+
+//set up arrays for position hashing
+void initHashKeys() {
+    int i = 0;
+    int j = 0;
+    for(i = 0; i < 13; i++) {
+        for(j = 0; j < 120; j++) {
+            pieceKeys[i][j] = RAND64;
+        }
+    }
+
+    sideKey = RAND64;
+
+    for(i = 0; i < 16; i++) {
+        castleKeys[i] = RAND64;
+    }
+}
 
 //setup arrays that allow us to quickly access the appropriate number to set or clear a bit given the 64base index
 void initBitMasks() {
@@ -52,5 +83,6 @@ void initSq120To64() {
 void allInit() {
     initSq120To64();
     initBitMasks();
+    initHashKeys();
     return;
 }
