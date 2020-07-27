@@ -83,6 +83,7 @@ typedef struct {
 // ***************** MACROS *****************
 
 #define FR2SQ(f,r) ((21 + (f)) + ((r) * 10))    //for file and rank, return 120 index
+#define SQ64(sq120) sq120ToSq64[sq120]          //quick conversion to 64index
 
 
 // ***************** GLOBALS *****************
@@ -91,6 +92,11 @@ extern int sq120ToSq64[BRD_SQ_NUM];     //convert padded board index to bitboard
 extern int sq64ToSq120[64];             //convert bitboard index to padded board index
 
 // ***************** FUNCTIONS *****************
-extern void allInit();  //init.c
+//init.c
+extern void allInit();
+
+//bitboards.c
+extern void printBitboard(U64 bb);
+
 
 #endif

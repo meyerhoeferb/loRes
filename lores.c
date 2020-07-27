@@ -4,27 +4,16 @@
 int main() {
     allInit();
 
-    int i = 0;  //FIXME
-    for(i = 0; i < BRD_SQ_NUM; i++) {
-        if(i % 10 == 0) {
-            printf("\n");
-        }
-        printf("%5d", sq120ToSq64[i]);
-    }
-    printf("\n");
-    printf("\n");
+    U64 bb = 0ULL;
 
-    for(i = 0; i < 64; i++) {
-        if(i % 8 == 0) {
-            printf("\n");
-        }
-        printf("%5d", sq64ToSq120[i]);
-    }
-    printf("\n");
+    printf("Start\n");
+    printBitboard(bb);
 
-    int n = 1;
-    int m = 4;
-    ASSERT(n == m);
+    printf("Start\n");
+    bb = bb | (1ULL << SQ64(D2));             //add pawn on d2
+    bb = bb | (1ULL << SQ64(G2));
+    printBitboard(bb);
+
 
 
 
