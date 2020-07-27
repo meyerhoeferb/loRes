@@ -5,6 +5,25 @@
 int sq120ToSq64[BRD_SQ_NUM];
 int sq64ToSq120[64];
 
+U64 setMask[64];
+U64 clearMask[64];
+
+//setup arrays that allow us to quickly access the appropriate number to set or clear a bit given the 64base index
+void initBitMasks() {
+    int i = 0;
+
+    for(i = 0; i < 64; i++) {
+        setMask[i] = 0;
+        clearMask[i] = 0;
+    }
+
+    for(i = 0; i < 64; i++) {
+        setMask[i] = (1ULL << i);
+        clearMask[i] = ~setMask[i];
+    }
+
+}
+
 void initSq120To64() {
     int i = 0;
     int file = FILE_A;
@@ -32,5 +51,6 @@ void initSq120To64() {
 
 void allInit() {
     initSq120To64();
+    initBitMasks();
     return;
 }

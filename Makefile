@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS=-std=gnu99 -Wall -pedantic -Werror
 
 all:
-	$(CC) $(CFLAGS) -o lores lores.c init.c bitboards.c
+	$(CC) $(CFLAGS) lores.c init.c bitboards.c -o lores
 
 clean:
 	rm -f *.o

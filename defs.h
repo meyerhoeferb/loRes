@@ -86,11 +86,16 @@ typedef struct {
 #define SQ64(sq120) sq120ToSq64[sq120]          //quick conversion to 64index
 #define POP(b) popBit(b)                        //make popbit a little easier
 #define CNT(b) countBits(b)                     //easier countbits
+#define CLRBIT(bb, sq) ((bb) &= clearMask[(sq)])//clear given bit in bitboard 
+#define SETBIT(bb, sq) ((bb) |= setMask[(sq)])  //set given bit in bitboard
+
 
 // ***************** GLOBALS *****************
 
 extern int sq120ToSq64[BRD_SQ_NUM];     //convert padded board index to bitboard index
 extern int sq64ToSq120[64];             //convert bitboard index to padded board index
+extern U64 setMask[64];                 //for setting bit of bb
+extern U64 clearMask[64];               //for clearing bit of bb
 
 // ***************** FUNCTIONS *****************
 //init.c
