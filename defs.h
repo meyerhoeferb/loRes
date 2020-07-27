@@ -83,7 +83,8 @@ typedef struct {
 // ***************** MACROS *****************
 
 #define FR2SQ(f,r) ((21 + (f)) + ((r) * 10))    //for file and rank, return 120 index
-#define SQ64(sq120) sq120ToSq64[sq120]          //quick conversion to 64index
+#define SQ64(sq120) (sq120ToSq64[(sq120)])      //quick conversion to 64index
+#define SQ120(sq64) (sq64ToSq120[(sq64)])       //quick conversion to 120index
 #define POP(b) popBit(b)                        //make popbit a little easier
 #define CNT(b) countBits(b)                     //easier countbits
 #define CLRBIT(bb, sq) ((bb) &= clearMask[(sq)])//clear given bit in bitboard
@@ -113,5 +114,8 @@ extern int countBits(U64 b);
 
 //hashkeys.c
 extern U64 generatePosKey(const S_BOARD *pos);
+
+//board.c
+extern void resetBoard(S_BOARD *pos);
 
 #endif
