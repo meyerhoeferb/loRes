@@ -84,7 +84,8 @@ typedef struct {
 
 #define FR2SQ(f,r) ((21 + (f)) + ((r) * 10))    //for file and rank, return 120 index
 #define SQ64(sq120) sq120ToSq64[sq120]          //quick conversion to 64index
-
+#define POP(b) popBit(b)                        //make popbit a little easier
+#define CNT(b) countBits(b)                     //easier countbits
 
 // ***************** GLOBALS *****************
 
@@ -97,6 +98,8 @@ extern void allInit();
 
 //bitboards.c
 extern void printBitboard(U64 bb);
+extern int popBit(U64 *bb);
+extern int countBits(U64 b);
 
 
 #endif
