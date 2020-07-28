@@ -21,6 +21,29 @@ U64 pieceKeys[13][120];             //these all hold random U64 numbers, used fo
 U64 sideKey;
 U64 castleKeys[16];
 
+int filesBrd[BRD_SQ_NUM];
+int ranksBrd[BRD_SQ_NUM];
+
+//set up rank and file arrays
+void initRankFileArrays() {
+    int i = 0;
+    for(i = 0; i < BRD_SQ_NUM; i++) {
+        filesBrd[i] = NO_SQ;
+        ranksBrd[i] = NO_SQ;
+    }
+
+    int rank = RANK_1;
+    int file = FILE_A;
+    int sq = 0;
+    for(rank = RANK_1; rank <= RANK_8; rank++) {
+        for(file = FILE_A; file <= FILE_H; file++) {
+            sq = FR2SQ(file, rank);
+            filesBrd[sq] = file;
+            ranksBrd[sq] = rank;
+        }
+    }
+}
+
 //set up arrays for position hashing
 void initHashKeys() {
     int i = 0;

@@ -25,6 +25,8 @@ typedef unsigned long long U64;
 #define MAX_GAME_MOVES 2048        //max allowed half moves in a game
 
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+#define TEST_FEN "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1"
+
 
 enum {EMPTY, wP, wN, wB, wR, wQ, wK, bP, bN, bB, bR, bQ, bK}; //piecetypes
 enum {FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H, FILE_NONE};  //file and row translations
@@ -118,6 +120,9 @@ extern int pcMin[13];
 extern int pcVal[13];
 extern int pcCol[13];
 
+extern int filesBrd[BRD_SQ_NUM];        //get the file of given square
+extern int ranksBrd[BRD_SQ_NUM];        //get the rank of given square
+
 // ***************** FUNCTIONS *****************
 //init.c
 extern void allInit();
@@ -135,5 +140,6 @@ extern int parseFen(char *fen, S_BOARD *pos);
 extern void resetBoard(S_BOARD *pos);
 extern void printBoard(const S_BOARD *pos);
 extern void updatePcLists(S_BOARD *pos);
+extern int checkBoard(const S_BOARD *pos);
 
 #endif

@@ -1,6 +1,85 @@
 #include "stdio.h"
 #include "defs.h"
 
+//check if our various lists and info about board match what is actually on the board
+//returns 1 bc only gets there if true, otherwise an assert will prevent function from returning
+int checkBoard(const S_BOARD *pos) {
+    int tempPcNum[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    int tempBigPc[2] = {0, 0};
+    int tempMajPc[2] = {0, 0};
+    int tempMinPc[2] = {0, 0};
+    int tempMaterial[2] = {0, 0};
+
+    int sq64, pc, pCount, pcNum, sq120, color;
+
+    U64 tempPawns[3] = {0ULL,0ULL,0ULL};
+
+    tempPawns[WHITE] = pos->pawns[WHITE];
+    tempPawns[BLACK] = pos->pawns[BLACK];
+    tempPawns[BOTH] = pos->pawns[BOTH];
+
+    //check piece list
+    for(pc = wP; pc <= bK; pc++) {
+        for(pcNum = 0; pcNum < pos->pcNum[pc]; pcNum++) {
+            sq120 = pos->pcList[pc][pcNum];
+            ASSERT(pos->pieces[sq120] == pc);
+        }
+    }
+
+    //check various counters
+    for(sq64 = 0; sq64 < 64; sq64++) {
+        sq120 = SQ120(sq64);
+        pc = pos->pieces[sq120];
+        tempPcNum[pc]++;
+        color = pcCol[pc];
+        if(pcBig[pc]) tempBigPc[color]++;
+        if(pcMaj[pc]) tempMajPc[color]++;
+        if(pcMin[pc]) tempMinPc[color]++;
+        tempMaterial[color] += pcVal[pc];
+    }
+
+    for(pc = wP; pc <= bK; pc++) {
+        ASSERT(tempPcNum[pc] == pos->pcNum[pc]);
+    }
+
+    //check number of pawns is correct
+    pCount = CNT(tempPawns[WHITE]);
+    ASSERT(pCount == pos->pcNum[wP]);
+    pCount = CNT(tempPawns[BLACK]);
+    ASSERT(pCount == pos->pcNum[bP]);
+    pCount = CNT(tempPawns[BOTH]);
+    ASSERT(pCount == pos->pcNum[wP] + pos->pcNum[bP]);
+
+    //check bitboards reflect correct squares
+    while(tempPawns[WHITE]) {
+        sq64 = POP(&tempPawns[WHITE]);
+        ASSERT(pos->pieces[SQ120(sq64)] == wP);
+    }
+    while(tempPawns[BLACK]) {
+        sq64 = POP(&tempPawns[BLACK]);
+        ASSERT(pos->pieces[SQ120(sq64)] == bP);
+    }
+    while(tempPawns[BOTH]) {
+        sq64 = POP(&tempPawns[BOTH]);
+        ASSERT(pos->pieces[SQ120(sq64)] == wP || pos->pieces[SQ120(sq64)] == bP);
+    }
+
+    //final sanity checks for counts, side, hash, enpas, kingSq
+    ASSERT(tempMaterial[WHITE] == pos->material[WHITE] && tempMaterial[BLACK] == pos->material[BLACK]);
+    ASSERT(tempMinPc[WHITE] == pos->minPc[WHITE] && tempMinPc[BLACK] == pos->minPc[BLACK]);
+    ASSERT(tempMajPc[WHITE] == pos->majPc[WHITE] && tempMajPc[BLACK] == pos->majPc[BLACK]);
+    ASSERT(tempBigPc[WHITE] == pos->bigPc[WHITE] && tempBigPc[BLACK] == pos->bigPc[BLACK]);
+
+    ASSERT(pos->side == WHITE || pos->side == BLACK);
+    ASSERT(generatePosKey(pos) == pos->posKey);     //remember hash is not given to our hash function, remember for future python engine
+
+    ASSERT(pos->enPas == NO_SQ || (ranksBrd[pos->enPas] == RANK_6 && pos->side==WHITE) || (ranksBrd[pos->enPas] == RANK_3 && pos->side==BLACK));
+    ASSERT(pos->pieces[pos->kingSq[WHITE]] == wK);
+    ASSERT(pos->pieces[pos->kingSq[BLACK]] == bK);
+
+    return TRUE;
+}
+
 //parse a fen and set up the position
 int parseFen(char *fen, S_BOARD *pos) {
     ASSERT(fen != NULL);
@@ -62,6 +141,7 @@ int parseFen(char *fen, S_BOARD *pos) {
 			sq120 = SQ120(sq64);
             if (piece != EMPTY) {
                 pos->pieces[sq120] = piece;
+
             }
 			file++;
         }
@@ -105,6 +185,8 @@ int parseFen(char *fen, S_BOARD *pos) {
     //generate position hash
     pos->posKey = generatePosKey(pos);
 
+    updatePcLists(pos);     //update our various list structures (including bitboards)
+
     return 0;
 }
 
@@ -129,6 +211,7 @@ void resetBoard(S_BOARD *pos) {
         pos->bigPc[i] = 0;
         pos->minPc[i] = 0;
         pos->majPc[i] = 0;
+        pos->material[i] = 0;
     }
     for(i = 0; i < 13; i++) {
         pos->pcNum[i] = 0;
@@ -182,7 +265,7 @@ void printBoard(const S_BOARD *pos) {
 
 }
 
-//update piece lists
+//update piece lists inluding kingSq and pawn bitboards
 void updatePcLists(S_BOARD *pos) {
     int pc, sq, color, i;
 
@@ -201,6 +284,11 @@ void updatePcLists(S_BOARD *pos) {
             pos->pcNum[pc]++;
 
             if(pc == wK || pc == bK) pos->kingSq[color] = sq;
+
+            if(pc == wP || pc == bP) {
+                SETBIT(pos->pawns[color], SQ64(sq));
+                SETBIT(pos->pawns[BOTH], SQ64(sq));
+            }
 
         }
     }
