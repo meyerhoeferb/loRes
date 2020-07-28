@@ -37,7 +37,7 @@ enum {A1 = 21, B1, C1, D1, E1, F1, G1, H1,
       A5 = 61, B5, C5, D5, E5, F5, G5, H5,
       A6 = 76, B6, C6, D6, E6, F6, G6, H6,
       A7 = 81, B7, C7, D7, E7, F7, G7, H7,
-      A8 = 91, B8, C8, D8, E8, F8, G8, H8, NO_SQ        //chess coord to array index 
+      A8 = 91, B8, C8, D8, E8, F8, G8, H8, NO_SQ        //chess coord to array index
 };
 
 enum {FALSE, TRUE};      //boolean
@@ -65,18 +65,20 @@ typedef struct {
     int fiftyMove;              //number of moves without pawn move/capture for draw condition
 
     int ply;                    //number of halfmoves in current search
-    int hisPly;                 //number of halfmoves in total game so far
+    int hisPly;                 //number of halfmoves since engine start
+    int totPly;                 //number of total half moves in game
 
     int castlePerm;             //castling permissions
 
     U64 posKey;                 //hash of position (for repitition)
 
     int pcNum[13];              //count of pieces on board
-    int bigPc[3];               //count of nonpawns on board (white black both)
-    int majPc[3];               //count of major pieces on board
-    int minPc[3];               //count of minor pieces on board
+    int bigPc[2];               //count of nonpawns on board (white black both)
+    int majPc[2];               //count of major pieces on board
+    int minPc[2];               //count of minor pieces on board
+    int material[2];            //sum of piece values for each side
 
-    int pList[13][10];          //piecelists for each type of piece (can possibly have 10 of each) makes movegen faster
+    int pcList[13][10];          //piecelists for each type of piece (can possibly have 10 of each) makes movegen faster
 
     S_UNDO history[MAX_GAME_MOVES]; //history of game positions/moves (indexed by hisPly, used to undo moves and also check for repitition)
 
@@ -105,6 +107,17 @@ extern U64 pieceKeys[13][120];                 //hashing info
 extern U64 sideKey;
 extern U64 castleKeys[16];
 
+extern char *pcChar[];                   //for printing
+extern char sideChar[];
+extern char rankChar[];
+extern char fileChar[];
+
+extern int pcBig[13];                   //easy lookup of piece attributes
+extern int pcMaj[13];
+extern int pcMin[13];
+extern int pcVal[13];
+extern int pcCol[13];
+
 // ***************** FUNCTIONS *****************
 //init.c
 extern void allInit();
@@ -118,6 +131,9 @@ extern int countBits(U64 b);
 extern U64 generatePosKey(const S_BOARD *pos);
 
 //board.c
+extern int parseFen(char *fen, S_BOARD *pos);
 extern void resetBoard(S_BOARD *pos);
+extern void printBoard(const S_BOARD *pos);
+extern void updatePcLists(S_BOARD *pos);
 
 #endif

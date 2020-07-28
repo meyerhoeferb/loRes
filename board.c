@@ -69,13 +69,13 @@ int parseFen(char *fen, S_BOARD *pos) {
 	}
 
     //turn
-    ASSERT(*fen == 'w' or || *fen == 'b');
+    ASSERT(*fen == 'w' || *fen == 'b');
     pos->side = (*fen == 'w') ? WHITE : BLACK;
     fen += 2;
 
     //castling permissions
     for(i = 0; i < 4; i++) {
-        if(*fen = ' ') {
+        if(*fen == ' ') {
             break;
         }
         switch(*fen) {
@@ -123,10 +123,12 @@ void resetBoard(S_BOARD *pos) {
 
     //clear piece lists and pawn bitboards
     for(i = 0; i < 3; i++) {
+        pos->pawns[i] = 0ULL;
+    }
+    for(i = 0; i < 2; i++) {
         pos->bigPc[i] = 0;
         pos->minPc[i] = 0;
         pos->majPc[i] = 0;
-        pos->pawns[i] = 0ULL;
     }
     for(i = 0; i < 13; i++) {
         pos->pcNum[i] = 0;
@@ -144,6 +146,62 @@ void resetBoard(S_BOARD *pos) {
     pos->castlePerm = 0;
     pos->posKey = 0ULL;
 
+    //TODO: halfmove clock and total move count
+}
 
+//print the board
+void printBoard(const S_BOARD *pos) {
 
+    printf("Game Board: \n\n");
+
+    int sq, file, rank, piece;
+    for(rank = RANK_8; rank >= RANK_1; rank--) {
+        printf("%d", rank + 1);
+        for(file = FILE_A; file <= FILE_H; file++) {
+            sq = FR2SQ(file, rank);
+            piece = pos->pieces[sq];
+            printf("%3s", pcChar[piece]);
+        }
+        printf("\n");
+    }
+    printf(" ");
+    for(file = FILE_A; file <= FILE_H; file++) {
+        printf("%c", 'a' + file);
+    }
+
+    printf("\n");
+    printf("side: %c\n", sideChar[pos->side]);
+    printf("enPas: %d\n", pos->enPas);
+    printf("castle: %c%c%c%c\n",
+            pos->castlePerm & WKCA?'K':'-',
+            pos->castlePerm & WQCA?'Q':'-',
+            pos->castlePerm & BKCA?'k':'-',
+            pos->castlePerm & BQCA?'q':'-');
+
+    printf("Hash: %llX\n", pos->posKey);
+
+}
+
+//update piece lists
+void updatePcLists(S_BOARD *pos) {
+    int pc, sq, color, i;
+
+    for(i = 0; i < BRD_SQ_NUM; i++) {
+        sq = i;
+        pc = pos->pieces[i];
+        if(pc != NO_SQ && pc != EMPTY) {
+            color = pcCol[pc];
+            if(pcBig[pc]) pos->bigPc[color]++;
+            if(pcMin[pc]) pos->minPc[color]++;
+            if(pcMaj[pc]) pos->majPc[color]++;
+
+            pos->material[color] += pcVal[pc];
+
+            pos->pcList[pc][pos->pcNum[pc]] = sq;
+            pos->pcNum[pc]++;
+
+            if(pc == wK || pc == bK) pos->kingSq[color] = sq;
+
+        }
+    }
 }

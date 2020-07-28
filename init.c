@@ -1,14 +1,13 @@
 
-
 #include "defs.h"
 #include "stdlib.h"
 
 //generate random 64 bit number, rand makes 15 bit number so add a bunch of them together shifted over
 //last line just takes the 4 final bits we need to fill 64
-#define RAND64 (    (U64)rand() + \
-                    ((U64)rand() << 15) + \
-                    ((U64)rand() << 30) + \
-                    ((U64)rand() << 45) + \
+#define RAND64 (    (U64)rand() | \
+                    ((U64)rand() << 15) | \
+                    ((U64)rand() << 30) | \
+                    ((U64)rand() << 45) | \
                     (((U64)rand() & 0xf) << 60) )
 
 

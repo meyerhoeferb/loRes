@@ -1,4 +1,5 @@
 #include "defs.h"
+#include "stdio.h"
 
 U64 generatePosKey(const S_BOARD *pos) {
     int sq = 0;
@@ -8,7 +9,7 @@ U64 generatePosKey(const S_BOARD *pos) {
     //hash in all pieces on board
     for(sq = 0; sq < BRD_SQ_NUM; sq++) {
         piece = pos->pieces[sq];
-        if(piece != NO_SQ && piece != EMPTY) {
+        if(piece != NO_SQ && piece != EMPTY && piece != NO_SQ) {
             ASSERT(piece>=wP && piece<=bK);
             finalKey ^= pieceKeys[piece][sq];
         }

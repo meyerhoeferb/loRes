@@ -4,26 +4,19 @@
 int main() {
     allInit();
 
-    U64 bb = 0ULL;
+    S_BOARD board[1];
 
-    printf("Start\n");
-    bb = bb | (1ULL << SQ64(D2));             //add pawn on d2
-    bb = bb | (1ULL << SQ64(D3));
-    bb = bb | (1ULL << SQ64(D4));
-    printBitboard(bb);
+    parseFen(START_FEN, board);
+    printBoard(board);
 
-    int count = CNT(bb);
+    parseFen("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1", board);
+    printBoard(board);
 
-    printf("%d\n", count);
+    parseFen("rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2", board);
+    printBoard(board);
 
-    int index = POP(&bb);
-
-    printf("index: %d\n", index);
-
-    printBitboard(bb);
-
-
-
+    parseFen("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2", board);
+    printBoard(board);
 
     return 0;
 }
