@@ -13,6 +13,8 @@ int main() {
     printBitboard(board->pawns[WHITE]);
     printBitboard(board->pawns[BLACK]);
     printBitboard(board->pawns[BOTH]);
+    showSqAtkBySide(WHITE, board);
+    showSqAtkBySide(BLACK, board);
 
 
     return 0;

@@ -96,6 +96,12 @@ typedef struct {
 #define CLRBIT(bb, sq) ((bb) &= clearMask[(sq)])//clear given bit in bitboard
 #define SETBIT(bb, sq) ((bb) |= setMask[(sq)])  //set given bit in bitboard
 
+#define ISN(p) (pieceKnight[(p)])               //check for piece types
+#define ISB(p) (pieceBishop[(p)])
+#define ISR(p) (pieceRook[(p)])
+#define ISQ(p) (pieceQueen[(p)])
+#define ISK(p) (pieceKing[(p)])
+
 
 // ***************** GLOBALS *****************
 
@@ -123,6 +129,12 @@ extern int pcCol[13];
 extern int filesBrd[BRD_SQ_NUM];        //get the file of given square
 extern int ranksBrd[BRD_SQ_NUM];        //get the rank of given square
 
+extern int pieceKnight[13];             //check for various piece types (more redundant bad coding on his part)
+extern int pieceKing[13];
+extern int pieceRook[13];
+extern int pieceBishop[13];
+extern int pieceQueen[13];
+
 // ***************** FUNCTIONS *****************
 //init.c
 extern void allInit();
@@ -141,5 +153,9 @@ extern void resetBoard(S_BOARD *pos);
 extern void printBoard(const S_BOARD *pos);
 extern void updatePcLists(S_BOARD *pos);
 extern int checkBoard(const S_BOARD *pos);
+
+//attack.c
+extern int sqAttacked(const int sq, const int side, const S_BOARD *pos);
+extern void showSqAtkBySide(const int side, const S_BOARD *pos);
 
 #endif
