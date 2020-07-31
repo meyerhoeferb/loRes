@@ -184,4 +184,8 @@ extern int checkBoard(const S_BOARD *pos);
 extern int sqAttacked(const int sq, const int side, const S_BOARD *pos);
 extern void showSqAtkBySide(const int side, const S_BOARD *pos);
 
+//io.c
+extern char * printSq(const int sq);
+extern char * printMove(const int move);
+
 #endif

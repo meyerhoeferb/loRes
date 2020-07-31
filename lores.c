@@ -18,12 +18,13 @@ int main() {
 
 
     int move = 0;
-    int from = 6; int to = 12; int captured = wR; int promoted = bR;
+    int from = A2; int to = H7; int captured = wR; int promoted = bN;
     move = (from) | (to << 7) | (captured << 14) | (promoted << 20);
 
-    printf("\ndec:%d hex%X\n", move, move);
-
     printf("from: %d to: %d cap: %d prom: %d\n", FROMSQ(move), TOSQ(move), CAPTURED(move), PROMOTED(move));
+
+    printf("move: %s\n", printMove(move));
+    printf("from: %s\n", printSq(from));
 
     return 0;
 }

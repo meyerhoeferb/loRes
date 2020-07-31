@@ -106,5 +106,6 @@ void allInit() {
     initSq120To64();
     initBitMasks();
     initHashKeys();
+    initRankFileArrays();
     return;
 }
