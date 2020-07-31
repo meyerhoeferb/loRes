@@ -46,6 +46,11 @@ enum {FALSE, TRUE};      //boolean
 
 enum {WKCA = 1, WQCA = 2, BKCA = 4, BQCA = 8};          //set bits for castling permissions
 
+typedef struct {
+    int move;               // info about move stored in bits
+    int score;              // priority for search
+} S_MOVE;
+
 //undo move structure
 typedef struct{
     int move;       //move played
@@ -102,6 +107,27 @@ typedef struct {
 #define ISQ(p) (pieceQueen[(p)])
 #define ISK(p) (pieceKing[(p)])
 
+//move setup macros
+/* Stored in one int (32 bits)
+0000 0000 0000 0000 0000 0000 0111 1111 -> FROM, 0x7F
+0000 0000 0000 0000 0011 1111 1000 0000 -> TO >> 7, 0x7F
+0000 0000 0000 0011 1100 0000 0000 0000 -> Piece Captured >> 14, 0xF
+0000 0000 0000 0100 0000 0000 0000 0000 -> EP Capture, 0x40000
+0000 0000 0000 1000 0000 0000 0000 0000 -> Pawn start, 0x80000
+0000 0000 1111 0000 0000 0000 0000 0000 -> Promoted piece >> 20, 0xF
+0000 0001 0000 0000 0000 0000 0000 0000 -> Castling move, 0x1000000
+*/
+#define FROMSQ(m) ((m) & 0x7F)
+#define TOSQ(m) (((m) >> 7) & 0x7F)
+#define CAPTURED(m) (((m) >> 14) & 0xF)
+#define PROMOTED(m) (((m) >> 20) & 0xF)
+
+#define MFLAGEP 0x40000
+#define MFLAGPS 0x80000
+#define MFLAGCA 0x1000000
+
+#define MFLAGCAP 0x7C000
+#define MFLAGPROM 0xF00000
 
 // ***************** GLOBALS *****************
 
